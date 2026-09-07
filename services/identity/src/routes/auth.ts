@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
-import { findUserByContact, createUser } from "../db-queries";
+import { findUserByContact, createUser, updatePassword } from "../db-queries";
 import { hashPassword, verifyPassword } from "../util/hash";
 import { calculateAge } from "../util/age";
 
@@ -92,6 +92,41 @@ router.post("/login", async (req, res) => {
     token,
     user: { id: user.id, first_name: user.first_name, contact: user.contact },
   });
+});
+
+
+const resetPasswordSchema = z.object({
+  contact: z.string().min(3),
+  new_password: z.string().min(8),
+  verified_token: z.string(),
+});
+
+router.post("/reset-password", async (req, res) => {
+  const parsed = resetPasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  const { contact, new_password, verified_token } = parsed.data;
+
+  let tokenPayload: { contact: string; purpose: string };
+  try {
+    tokenPayload = jwt.verify(verified_token, process.env.JWT_SECRET!) as any;
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired verification token" });
+  }
+  if (tokenPayload.purpose !== "contact_verified" || tokenPayload.contact !== contact) {
+    return res.status(401).json({ error: "Contact was not verified" });
+  }
+
+  const user = await findUserByContact(contact);
+  if (!user) {
+    return res.status(404).json({ error: "No account found for this contact" });
+  }
+
+  const password_hash = await hashPassword(new_password);
+  await updatePassword(contact, password_hash);
+
+  res.json({ reset: true });
 });
 
 export default router;

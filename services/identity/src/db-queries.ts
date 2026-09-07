@@ -68,3 +68,7 @@ export async function checkCode(contact: string, code: string): Promise<boolean>
   await pool.query(`UPDATE verification_codes SET consumed = true WHERE id = $1`, [result.rows[0].id]);
   return true;
 }
+
+export async function updatePassword(contact: string, password_hash: string): Promise<void> {
+  await pool.query("UPDATE users SET password_hash = $1 WHERE contact = $2", [password_hash, contact]);
+}
