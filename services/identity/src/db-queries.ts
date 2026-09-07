@@ -21,8 +21,8 @@ export async function createUser(input: {
 }): Promise<User> {
   const result = await pool.query<User>(
     `INSERT INTO users
-      (first_name, middle_name, surname, contact, contact_type, date_of_birth, gender, password_hash)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      (first_name, middle_name, surname, contact, contact_type, date_of_birth, gender, password_hash, is_verified)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true)
      RETURNING *`,
     [
       input.first_name,

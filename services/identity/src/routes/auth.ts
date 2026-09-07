@@ -15,6 +15,7 @@ const signupSchema = z.object({
   date_of_birth: z.string(), // YYYY-MM-DD
   gender: z.enum(["male", "female"]),
   password: z.string().min(8),
+  verified_token: z.string(),
 });
 
 const loginSchema = z.object({
@@ -33,6 +34,16 @@ router.post("/signup", async (req, res) => {
   }
   const data = parsed.data;
 
+  let tokenPayload: { contact: string; purpose: string };
+  try {
+    tokenPayload = jwt.verify(data.verified_token, process.env.JWT_SECRET!) as any;
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired verification token" });
+  }
+  if (tokenPayload.purpose !== "contact_verified" || tokenPayload.contact !== data.contact) {
+    return res.status(401).json({ error: "Contact was not verified" });
+  }
+
   const existing = await findUserByContact(data.contact);
   if (existing) {
     return res.status(409).json({ error: "Account already exists for this contact" });
@@ -50,14 +61,12 @@ router.post("/signup", async (req, res) => {
     password_hash,
   });
 
-  // NOTE: account created but NOT verified yet.
-  // Verification service should be called next to send SMS/WhatsApp/email code.
   const token = signToken(user.id);
 
   res.status(201).json({
     token,
     user: { id: user.id, first_name: user.first_name, contact: user.contact, is_verified: user.is_verified },
-    next_step: "verify_contact",
+    
   });
 });
 
