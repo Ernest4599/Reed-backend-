@@ -18,11 +18,12 @@ export async function createUser(input: {
   date_of_birth: string;
   gender: Gender;
   password_hash: string;
+  is_verified: boolean;
 }): Promise<User> {
   const result = await pool.query<User>(
     `INSERT INTO users
       (first_name, middle_name, surname, contact, contact_type, date_of_birth, gender, password_hash, is_verified)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
      RETURNING *`,
     [
       input.first_name,
@@ -33,6 +34,7 @@ export async function createUser(input: {
       input.date_of_birth,
       input.gender,
       input.password_hash,
+      input.is_verified,
     ]
   );
   return result.rows[0];

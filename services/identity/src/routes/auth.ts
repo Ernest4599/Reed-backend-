@@ -16,7 +16,7 @@ const signupSchema = z.object({
   date_of_birth: z.string(), // YYYY-MM-DD
   gender: z.enum(["male", "female"]),
   password: z.string().min(8),
-  verified_token: z.string(),
+  verified_token: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -35,15 +35,19 @@ router.post("/signup", async (req, res) => {
   }
   const data = parsed.data;
 
-  let tokenPayload: { contact: string; purpose: string };
-  try {
-    tokenPayload = jwt.verify(data.verified_token, process.env.JWT_SECRET!) as any;
-  } catch {
-    return res.status(401).json({ error: "Invalid or expired verification token" });
-  }
-  if (tokenPayload.purpose !== "contact_verified" || tokenPayload.contact !== data.contact) {
-    return res.status(401).json({ error: "Contact was not verified" });
-  }
+    if (data.verified_token) {
+      let tokenPayload: { contact: string; purpose: string };
+      try {
+        tokenPayload = jwt.verify(data.verified_token, process.env.JWT_SECRET!) as any;
+      } catch {
+        return res.status(401).json({ error: "Invalid or expired verification token" });
+      }
+      if (tokenPayload.purpose !== "contact_verified" || tokenPayload.contact !== data.contact) {
+        return res.status(401).json({ error: "Contact was not verified" });
+      }
+    } else if (process.env.ALLOW_UNVERIFIED_SIGNUP !== "true") {
+      return res.status(400).json({ error: "verified_token is required" });
+    }
 
   const existing = await findUserByContact(data.contact);
   if (existing) {
@@ -60,6 +64,7 @@ router.post("/signup", async (req, res) => {
     date_of_birth: data.date_of_birth,
     gender: data.gender,
     password_hash,
+    is_verified: !!data.verified_token,
   });
 
   const token = signToken(user.id);

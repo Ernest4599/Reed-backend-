@@ -14,6 +14,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-sns": "^3.1127.0",
     "@reed/shared": "^1.0.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
