@@ -3,6 +3,7 @@ import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { findUserByContact, createUser } from "../db-queries";
 import { hashPassword, verifyPassword } from "../util/hash";
+import { calculateAge } from "../util/age";
 
 const router = Router();
 
@@ -65,7 +66,7 @@ router.post("/signup", async (req, res) => {
 
   res.status(201).json({
     token,
-    user: { id: user.id, first_name: user.first_name, contact: user.contact, is_verified: user.is_verified },
+    user: { id: user.id, first_name: user.first_name, contact: user.contact, is_verified: user.is_verified, age: calculateAge(user.date_of_birth) },
     
   });
 });
