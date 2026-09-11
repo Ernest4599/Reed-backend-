@@ -39,12 +39,17 @@ const snsClient = new SNSClient({
 
 class SmsSender implements VerificationSender {
   async send(contact: string, code: string): Promise<void> {
-    await snsClient.send(
+    const result = await snsClient.send(
       new PublishCommand({
         PhoneNumber: contact, // must be E.164 format, e.g. +14155552671
         Message: `Your Reed verification code is: ${code}`,
       })
     );
+
+    console.log("[SNS] SMS publish result:", {
+      messageId: result.MessageId,
+      contact,
+    });
   }
 }
 
