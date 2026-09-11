@@ -43,6 +43,12 @@ class SmsSender implements VerificationSender {
       new PublishCommand({
         PhoneNumber: contact, // must be E.164 format, e.g. +14155552671
         Message: `Your Reed verification code is: ${code}`,
+          MessageAttributes: {
+            "AWS.SNS.SMS.SMSType": {
+              DataType: "String",
+              StringValue: "Transactional",
+            },
+          },
       })
     );
 
