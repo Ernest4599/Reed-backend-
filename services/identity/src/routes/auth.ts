@@ -71,7 +71,7 @@ router.post("/signup", async (req, res) => {
 
   res.status(201).json({
     token,
-    user: { id: user.id, first_name: user.first_name, contact: user.contact, is_verified: user.is_verified, age: calculateAge(user.date_of_birth) },
+    user: { id: user.id, first_name: user.first_name, contact: user.contact, is_verified: user.is_verified, age: user.date_of_birth ? calculateAge(user.date_of_birth) : null },
     
   });
 });
@@ -84,10 +84,12 @@ router.post("/login", async (req, res) => {
   const { contact, password } = parsed.data;
 
   const user = await findUserByContact(contact);
-  if (!user || !(await verifyPassword(user.password_hash, password))) {
+  if (!user || !user.password_hash) {
+    return res.status(401).json({ error: "This account uses Google sign-in. Please continue with Google." });
+  }
+  if (!(await verifyPassword(user.password_hash, password))) {
     return res.status(401).json({ error: "Incorrect email/phone or password" });
   }
-
   if (!user.is_verified) {
     return res.status(403).json({ error: "Account not verified", next_step: "verify_contact" });
   }

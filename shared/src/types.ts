@@ -1,5 +1,6 @@
 export type Gender = "male" | "female";
 export type VerificationChannel = "sms" | "whatsapp" | "email";
+export type AuthProvider = "local" | "google";
 
 export interface User {
   id: string;
@@ -8,9 +9,11 @@ export interface User {
   surname: string;
   contact: string;
   contact_type: "phone" | "email";
-  date_of_birth: string;
-  gender: Gender;
-  password_hash: string;
+  date_of_birth: string | null;
+  gender: Gender | null;
+  password_hash: string | null;
   is_verified: boolean;
+  auth_provider: AuthProvider;
+  google_id: string | null;
   created_at: string;
 }

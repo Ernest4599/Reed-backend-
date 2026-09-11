@@ -74,3 +74,24 @@ export async function checkCode(contact: string, code: string): Promise<boolean>
 export async function updatePassword(contact: string, password_hash: string): Promise<void> {
   await pool.query("UPDATE users SET password_hash = $1 WHERE contact = $2", [password_hash, contact]);
 }
+
+export async function findUserByGoogleId(googleId: string): Promise<User | null> {
+  const result = await pool.query<User>("SELECT * FROM users WHERE google_id = $1", [googleId]);
+  return result.rows[0] ?? null;
+}
+
+export async function createGoogleUser(input: {
+  first_name: string;
+  surname: string;
+  contact: string;
+  google_id: string;
+}): Promise<User> {
+  const result = await pool.query<User>(
+    `INSERT INTO users
+      (first_name, middle_name, surname, contact, contact_type, is_verified, auth_provider, google_id)
+     VALUES ($1, NULL, $2, $3, 'email', true, 'google', $4)
+     RETURNING *`,
+    [input.first_name, input.surname, input.contact, input.google_id]
+  );
+  return result.rows[0];
+}
